@@ -1,2 +1,6 @@
 # scrapbook
-A place to keep my stuff
+
+---
+
+* [Steam Deck](Steam_Deck.md)
+* [Windows 11](Windows_11.md)
