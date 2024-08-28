@@ -59,8 +59,16 @@ Allows you to build the plugin for all platforms locally using a GitHub workflow
   * Optional: use [Scoop](https://scoop.sh/), I already have this installed for other Windows deps
   * Use PowerShell to verify your Act install works `Get-Command act`
 
-To test building the plugin, in PowerShell
+To test building the plugin, in PowerShell.
+
+Currently does not work, [due to](https://github.com/nektos/act/issues/973):
+
+* `container: is not yet supported (as in, it will run in a container, but you won't get node and other stuff that GHA mounts into that container for it to work properly)`
+* `OCI runtime exec failed: exec failed: unable to start container process: exec: "node": executable file not found in $PATH: unknown`
+
+
   * `cd C:\Users\dant\rack-dev\<plugin>\`
-  * `act push`
+  * Show what jobs are available `act --list`
+  * `act -j build`
     * The first time you run this Docker Desktop will require a size selection
       * `Medium size image: ~500MB, includes only necessary tools to bootstrap actions and aims to be compatible with most actions`
