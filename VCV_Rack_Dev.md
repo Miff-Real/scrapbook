@@ -14,6 +14,7 @@ dev tasks and is easier to work with than PowerShell or `cmd`
 * Map a network drive in file explorer so that you can access the WSL files directly in Windows
   * Open `This PC` in file explorer, right-click and select `Add a network location`
   * Use the address `\\wsl.localhost\ubuntu` or `\\wsl.localhost\debian`
+  * Access WSL files from the network drive, eg. edit your `.bashrc` in a windows text editor
 
 * Run WSL, setup your terminal how you like it, and update your `.bashrc` file
 * In WSL:
@@ -25,7 +26,7 @@ dev tasks and is easier to work with than PowerShell or `cmd`
     * `curl -sS https://starship.rs/install.sh | sh`
     * add `eval "$(starship init bash)"` to `.bashrc`
 
-### Linux build
+### Linux build in WSL
 
 Using WSL we can build a Linux version of a plugin
 
@@ -47,14 +48,39 @@ Using WSL we can build a Linux version of a plugin
   * `make dist`
     * verify your linux build resulted in `/mnt/c/Users/dant/rack-dev/<plugin>/dist/<plugin>-<version>-lin-x64.vcvplugin`
 
+### Build using the `rack-plugin-toolchain` and Docker
+
+Should be able to build a docker image that can cross compile a plugin for all platforms
+
+* [install Docker Desktop](https://docs.docker.com/desktop/install/windows-install/) using WSL
+  * Annoyingly you have to restart your machine
+  * login with GitHub
+  * Test that Docker is working correctly by running the tutorial image `docker run -d -p 80:80 docker/getting-started`
+  * If everything is good, you can stop and delete the tutorial image
+
+* Clone [@qno](https://community.vcvrack.com/u/qno/)'s [fork of the `rack-plugin-toolchain`](https://github.com/qno/rack-plugin-toolchain) repo into the `rack-dev` directory
+  * Need to sort out getting the `MacOSX11.1.sdk.tar.xz` to make MacOS builds work
+
+* In WSL
+  * Go to the toolchain directory `cd /mnt/c/Users/dant/rack-dev/rack-plugin-toolchain`
+  * Build the Docker image `make docker-build`
+  * You can view the build details in the Docker Desktop app
+  * When the Rack toolchain needs to be updated (and after the repo has been updated to a new version):
+    * `make rack-sdk-clean` then `make rack-sdk-all`
+  * To build platform specific versions of a plugin:
+    * `make docker-plugin-build-win-x64 PLUGIN_DIR=/mnt/c/Users/dant/rack-dev/DanTModules/`
+    * `make docker-plugin-build-lin-x64 PLUGIN_DIR=/mnt/c/Users/dant/rack-dev/DanTModules/`
+    * `make docker-plugin-build-mac-x64 PLUGIN_DIR=/mnt/c/Users/dant/rack-dev/DanTModules/`
+    * `make docker-plugin-build-mac-arm64 PLUGIN_DIR=/mnt/c/Users/dant/rack-dev/DanTModules/`
+  * To build all platforms:
+    * `make docker-plugin-build PLUGIN_DIR=/mnt/c/Users/dant/rack-dev/DanTModules/`
+  * To check if there are any issue with your plugin code:
+    * `make docker-plugin-analyze PLUGIN_DIR=/mnt/c/Users/dant/rack-dev/DanTModules/`
+
 ### Local GitHub Actions using Act
 
-Allows you to build the plugin for all platforms locally using a GitHub workflow
+Should allow you to build the plugin for all platforms locally using a GitHub workflow
 
-* [install docker desktop](https://docs.docker.com/desktop/install/windows-install/) using WSL
-  * Annoyingly you have to restart your machine
-  * Attempted to login with GitHub, doesn't seem to work
-  * Just using without a login seems fine
 * [install Act](https://nektosact.com/installation/index.html)
   * Optional: use [Scoop](https://scoop.sh/), I already have this installed for other Windows deps
   * Use PowerShell to verify your Act install works `Get-Command act`
@@ -69,6 +95,9 @@ Currently does not work, [due to](https://github.com/nektos/act/issues/973):
 
   * `cd C:\Users\dant\rack-dev\<plugin>\`
   * Show what jobs are available `act --list`
-  * `act -j build`
+  * `act push` | `act -j build` | `act push --matrix platform:win-x64` | `act push --matrix platform:win-x64 --action-offline-mode`
     * The first time you run this Docker Desktop will require a size selection
       * `Medium size image: ~500MB, includes only necessary tools to bootstrap actions and aims to be compatible with most actions`
+
+ * Opt out of the GitHub runner host env for your local platform, ie build windows on windows directly
+  * `act push --matrix platform:win-x64 -P windows-latest=-self-hosted`
